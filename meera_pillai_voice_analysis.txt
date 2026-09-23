@@ -1,0 +1,170 @@
+MEERA PILLAI (SKINSTINCT) - VOICE & STYLE ANALYSIS
+Based on 15 pieces: 4 LinkedIn posts + 11 email newsletters
+======================================================================
+
+1. HOW SHE OPENS
+----------------------------------------------------------------------
+She never warms up. The first line is always one of three things:
+
+- A concrete fact that undercuts something the reader believes.
+  "The niacinamide serum you're using probably has the ingredient listed
+  at 5% or 10%... That number is almost certainly meaningless."
+- A scene with a date and place.
+  "In 2021 I was sitting in a stability review meeting..." and
+  "Last September I was at a trade fair in Mumbai."
+- A statement of intent, often admitting she's hesitant.
+  "I want to start with something direct." / "I've been avoiding writing
+  this one." / "I almost didn't write this email."
+
+The LinkedIn posts open with evidence or a scene. The newsletters open
+with "Hi," and then say what the email is about, often admitting some
+reluctance. She never uses a question hook, a bold one-liner or
+"Let's talk about...".
+
+
+2. SENTENCE LENGTH AND RHYTHM
+----------------------------------------------------------------------
+- Sentences average about 17 words, with a median of 14. Roughly 16%
+  are very short (six words or fewer) and about 14% run past 30 words.
+- Her signature rhythm is a long explanation followed by a short, flat
+  punchline.
+  "Most serums don't list their pH on the label. This is legal. It is
+  also not helpful."
+  "The actives were intact. The formulation was working as designed. It
+  was designed for the wrong context."
+- She uses pairs of contrasting sentences.
+  "Niacin is not inert. It causes vasodilation."
+  "The ingredient is present. The formulation conditions for efficacy
+  are not."
+- She builds lists of three: three conditions, three things the label
+  doesn't tell you, three requirements.
+- She uses no exclamation marks at all, and there are only two question
+  marks in the whole set. Both are quoted or reflective, never aimed at
+  the reader.
+- Her paragraphs are medium length and each one covers a single idea.
+  She doesn't use one-line paragraphs for effect the way LinkedIn
+  writers usually do.
+
+
+3. USE OF DATA AND EVIDENCE
+----------------------------------------------------------------------
+- She's very precise with numbers: pH 3.2 against 3.8, 23% of returns,
+  71% of them from humid cities, falling to 8%, a 67% repeat rate
+  against an industry 20-40%, 2mg/cm2, 26 EU allergens.
+- She uses her own data before outside data: her return figures, CoA
+  sampling, 14 months of Vitamin C trials. Outside studies appear only
+  rarely, and she names them (University of Liverpool, 2022).
+- She uses ranges and hedges when the evidence calls for it:
+  "somewhere between 1-3%", "effect sizes that range from modest to
+  meaningful." She tells you how strong the evidence is: "solid and
+  replicable", "thinner", "essentially absent."
+- She shows the mechanism behind a fact, so the reader can check her
+  reasoning, rather than just stating the fact.
+- She uses documents as proof: CoA, INCI position, temperature logs,
+  stability protocols.
+
+
+4. WHAT SHE NEVER SAYS
+----------------------------------------------------------------------
+- She never hypes. You won't find "game-changer", "obsessed",
+  "holy grail", "glow", "skin-loving" (she puts that one in scare
+  quotes) or "clean" without questioning it.
+- She never asks readers to act: no "shop now", no "link in bio", no
+  discount codes. She repeatedly tells readers she isn't selling
+  ("I'm not selling a sunscreen").
+- She doesn't use emojis, hashtags, exclamation marks or rhetorical
+  questions.
+- She doesn't call out competitors by name. She criticises the system,
+  not people ("I'm not saying the people in that room were incompetent").
+- She doesn't claim authority she doesn't have: "I'm not a
+  dermatologist. I don't have a medical degree."
+- She doesn't make absolute claims or tell scare stories. Even parabens
+  get a fair hearing.
+- She doesn't lecture about feelings or self-care, and she never
+  mentions how skin looks: no beauty ideals, no "confidence."
+
+
+5. HOW PERSONAL SHE GETS
+----------------------------------------------------------------------
+She's personal about her work and her decisions, but reveals almost
+nothing about her private life.
+
+- She does share her career history, the meeting that made her leave,
+  her mistakes ("embarrassingly long", "should have been right the
+  first time"), her frustration and what she's proud of
+  ("But I'll take it").
+- She doesn't share family, her body or her own skin, her daily
+  routine, her feelings about being a founder, or struggle stories. Her
+  emotions stay small and specific: "discomfort", "frustrating",
+  "I've been sitting with."
+- She describes her own origin story as "not a particularly inspiring
+  story". She plays her story down on purpose.
+
+
+6. HER OWN RECURRING MOVES
+----------------------------------------------------------------------
+- She pre-empts the wrong reading. "I'm not saying X. I'm saying Y."
+  It appears in almost every piece, 11 times as "I'm not...".
+- She admits her weaknesses before anyone can point them out: no
+  Vitamin C product yet, early-stage testing, the humidity mistake.
+- She tells readers to question any brand, including hers. "Not from us
+  specifically - from any brand." Most pieces end by telling readers to
+  ask a brand for documentation.
+- She has a stock closing line: "that's useful information" or "that
+  tells you something useful." It appears three times word for word,
+  and in other forms elsewhere.
+- She uses "I" for her judgements and "we" for what the company does.
+  Roughly 90 uses of "I" against 25 of "we", so she writes as one
+  accountable person.
+- She speaks directly to the reader as "you" (66 times), as an equal
+  who can evaluate the evidence. She doesn't talk down to them.
+
+
+7. STRUCTURE
+----------------------------------------------------------------------
+  1. A hook: a fact or a scene.
+  2. The mechanism: why it happens.
+  3. Nuance: "I'm not saying...".
+  4. What Skinstinct does, stated plainly, often including a
+     shortcoming.
+  5. What the reader should do, usually "ask for documentation."
+  6. For newsletters, the sign-off is just "Meera". No "xoxo", no
+     "Best."
+
+
+8. WORD CHOICE AND REGISTER
+----------------------------------------------------------------------
+- Her tone is precise, like a scientist writing a review, but she keeps
+  it readable.
+- She uses technical terms (vasodilation, stratum corneum,
+  transepidermal water loss) and explains each one in plain words
+  straight after.
+- Her spelling is British and Indian: oxidise, colour, sensitisation,
+  oestrogenic.
+- Words she relies on: "actually", "specifically", "the gap",
+  "documentation", "meaningful", "honest/honestly", "properly".
+- She sets examples in Indian cities (Mumbai in July, Chennai in
+  August), which grounds her writing locally without making it feel
+  folksy.
+
+
+9. TONE
+----------------------------------------------------------------------
+- She's calm and a little dry. "She didn't, which is a reasonable
+  outcome."
+- She's openly sceptical of the industry but not cynical, and she gives
+  credit where it's due. Clean beauty "gets some things right."
+- Her writing feels trustworthy because she accepts looking worse for
+  the sake of accuracy: "It is not the most flattering version of the
+  information."
+
+
+10. WATCH-OUTS IF YOU'RE WRITING AS HER
+----------------------------------------------------------------------
+- She hedges before and after a point. Don't copy the "I'm not saying"
+  move more than once per piece, or it turns into a tic. She already
+  comes close.
+- She uses "honest" and "genuinely" often, 8 and 6 times. Use them
+  sparingly or they stop sounding sincere.
+- Invented numbers would sink it. Any figure you add has to be real and
+  sourced.
