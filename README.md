@@ -100,9 +100,11 @@ From then on, her notes get drafts and messages from anyone else are ignored.
 
 ## Notes
 
-- Changing `voice_instructions.md` takes effect on the next deploy. To edit it
-  without a deploy of code changes, you can instead paste the guide into a
-  `VOICE_INSTRUCTIONS` environment variable in Vercel, which overrides the file.
+- The Vercel project is connected to this GitHub repo: every push to `main`
+  deploys to production (other branches get preview deployments). So to change
+  Meera's voice, edit `voice_instructions.md` and commit it to `main`.
+- Alternatively, paste the guide into a `VOICE_INSTRUCTIONS` environment
+  variable in Vercel, which overrides the file (redeploy after changing it).
 - The model defaults to `gemini-3.6-flash`; set `GEMINI_MODEL` to change it.
 - If Gemini fails (timeout, rate limit, bad key), Meera gets a short message
   saying why and can resend the note.
