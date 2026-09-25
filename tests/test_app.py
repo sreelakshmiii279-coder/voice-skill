@@ -108,9 +108,12 @@ def test_start_command(client, sent):
     assert reply["text"] == app_module.HELP_TEXT
 
 
-def test_placeholder_voice_file_counts_as_unwritten(monkeypatch):
+def test_placeholder_voice_file_counts_as_unwritten(monkeypatch, tmp_path):
     monkeypatch.delenv("VOICE_INSTRUCTIONS", raising=False)
-    assert config.voice_instructions() == ""  # repo ships the placeholder
+    placeholder = tmp_path / "voice_instructions.md"
+    placeholder.write_text(config.VOICE_PLACEHOLDER_MARKER + " with Meera's voice. -->\n", encoding="utf-8")
+    monkeypatch.setattr(config, "VOICE_FILE", placeholder)
+    assert config.voice_instructions() == ""
 
 
 def test_long_drafts_are_split():
