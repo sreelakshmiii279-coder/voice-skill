@@ -1,6 +1,6 @@
 # Meera Drafts
 
-A Telegram bot that turns Meera's notes into draft posts. She texts a note to
+A Telegram bot that turns Meera's notes into draft posts. She sends a note (typed or as a voice note) to
 the bot, Gemini scores whether the note has enough in it for a post, and if
 it does, writes 5 drafts in her voice that come back as replies in the same
 chat. Hosted on Vercel.
@@ -114,8 +114,11 @@ From then on, her notes get drafts and messages from anyone else are ignored.
 - The model defaults to `gemini-3.6-flash`; set `GEMINI_MODEL` to change it.
 - If Gemini fails (timeout, rate limit, bad key), Meera gets a short message
   saying why and can resend the note.
-- Voice notes and photos aren't transcribed; only text (and photo captions)
-  is drafted.
+- Voice notes (and audio files) are transcribed by Gemini first. The bot
+  replies with the transcript, then scores and drafts it like a typed note.
+  Voice notes over 5 minutes are refused (`MAX_VOICE_SECONDS`) so the whole
+  thing finishes before Telegram times out. Photos are only used for their
+  caption.
 - Nothing is stored: each note is drafted on its own, with no memory of past
   notes.
 - Run the tests with `pytest`.

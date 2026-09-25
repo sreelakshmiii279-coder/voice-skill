@@ -31,6 +31,9 @@ GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-3.6-flash")
 MIN_NOTE_SCORE = int(_env("MIN_NOTE_SCORE", "6") or 6)
 # How many alternative drafts each note gets.
 DRAFT_COUNT = int(_env("DRAFT_COUNT", "5") or 5)
+# Longer voice notes are refused: transcribing + scoring + drafting has to
+# finish before Telegram gives up on the webhook call and resends the note.
+MAX_VOICE_SECONDS = int(_env("MAX_VOICE_SECONDS", "300") or 300)
 
 # Meera's voice guide. Lives in voice_instructions.md; the VOICE_INSTRUCTIONS
 # env var overrides the file if set.

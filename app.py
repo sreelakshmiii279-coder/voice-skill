@@ -18,7 +18,7 @@ log = logging.getLogger("meera-drafts")
 app = Flask(__name__)
 
 HELP_TEXT = (
-    "Send me a note — a rough thought, a few bullet points, anything. "
+    "Send me a note, typed or as a voice note — a rough thought, a few bullet points, anything. "
     "If there's enough in it for a post, I'll send back a few drafts in your "
     "voice to choose from. Reminders and half-finished thoughts get skipped."
 )
@@ -77,12 +77,22 @@ def handle_update(update):
         return
 
     note = (message.get("text") or message.get("caption") or "").strip()
+    # Voice notes recorded in Telegram, or audio files sent to the bot.
+    audio = message.get("voice") or message.get("audio")
     if note.split(maxsplit=1)[:1] in (["/start"], ["/help"]):
         telegram.send_message(chat_id, HELP_TEXT)
         return
-    if not note:
+    if not note and not audio:
         telegram.send_message(
-            chat_id, "I can only work with text for now — type the note out and I'll draft it.", message_id
+            chat_id, "I can work with text or voice notes — send one of those and I'll draft it.", message_id
+        )
+        return
+    if audio and audio.get("duration", 0) > config.MAX_VOICE_SECONDS:
+        telegram.send_message(
+            chat_id,
+            f"That voice note is over {config.MAX_VOICE_SECONDS // 60} minutes, which is too long for me to "
+            "transcribe and draft in one go. Could you send a shorter one?",
+            message_id,
         )
         return
 
@@ -98,6 +108,21 @@ def handle_update(update):
 
     telegram.send_typing(chat_id)
     try:
+        if audio:
+            try:
+                audio_bytes = telegram.download_file(audio["file_id"])
+            except telegram.TelegramError as e:
+                log.warning("Voice download failed: %s", e)
+                telegram.send_message(chat_id, "Couldn't download that voice note from Telegram. Send it again?", message_id)
+                return
+            note = gemini.transcribe(audio_bytes, audio.get("mime_type") or "audio/ogg")
+            if not note:
+                telegram.send_message(chat_id, "I couldn't hear any speech in that voice note.", message_id)
+                return
+            # So she can see what the drafts are based on.
+            telegram.send_message(chat_id, f"Transcript:\n\n{note}", message_id)
+            telegram.send_typing(chat_id)
+
         # Reminders and half-finished thoughts get scored low and stop here.
         score, reason = gemini.score_note(note)
         log.info("Note scored %s/10: %s", score, reason)

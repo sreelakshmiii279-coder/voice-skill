@@ -114,10 +114,65 @@ def test_unexpected_error_still_returns_200(client, monkeypatch):
     assert post(client, "a note").status_code == 200
 
 
-def test_non_text_message(client, sent):
+def test_unsupported_message(client, sent):
     post(client, photo=[{"file_id": "x"}])
     [reply] = messages(sent)
-    assert "only work with text" in reply["text"]
+    assert "text or voice notes" in reply["text"]
+
+
+VOICE = {"file_id": "voice-1", "duration": 20, "mime_type": "audio/ogg"}
+
+
+def test_voice_note_is_transcribed_then_drafted(client, sent, monkeypatch):
+    seen = {}
+    monkeypatch.setattr(telegram, "download_file", lambda file_id: seen.setdefault("file_id", file_id) and b"OGG")
+    monkeypatch.setattr(gemini, "transcribe", lambda audio, mime: seen.update(mime=mime) or "Spoken note about pH.")
+    monkeypatch.setattr(gemini, "score_note", lambda note: seen.update(scored=note) or (8, "Good."))
+    monkeypatch.setattr(gemini, "draft_posts", lambda note, voice, count: [("A", "Post.")])
+    post(client, voice=VOICE)
+    assert seen == {"file_id": "voice-1", "mime": "audio/ogg", "scored": "Spoken note about pH."}
+    replies = [r["text"] for r in messages(sent)]
+    assert replies[0] == "Transcript:\n\nSpoken note about pH."
+    assert replies[1].startswith("8/10: Good.")
+    assert replies[-1] == "Draft 1 of 1 · A\n\nPost."
+
+
+def test_low_scoring_voice_note_shows_transcript_and_reason(client, sent, monkeypatch):
+    monkeypatch.setattr(telegram, "download_file", lambda file_id: b"OGG")
+    monkeypatch.setattr(gemini, "transcribe", lambda audio, mime: "remind me to call the courier")
+    monkeypatch.setattr(gemini, "score_note", lambda note: (1, "Just a reminder."))
+    monkeypatch.setattr(gemini, "draft_posts", lambda *a: pytest.fail("should not draft"))
+    post(client, voice=VOICE)
+    assert [r["text"] for r in messages(sent)] == [
+        "Transcript:\n\nremind me to call the courier",
+        "No draft for this one (1/10): Just a reminder.",
+    ]
+
+
+def test_silent_voice_note(client, sent, monkeypatch):
+    monkeypatch.setattr(telegram, "download_file", lambda file_id: b"OGG")
+    monkeypatch.setattr(gemini, "transcribe", lambda audio, mime: "")
+    monkeypatch.setattr(gemini, "score_note", lambda *a: pytest.fail("should not score"))
+    post(client, voice=VOICE)
+    [reply] = messages(sent)
+    assert "couldn't hear any speech" in reply["text"]
+
+
+def test_too_long_voice_note_is_refused(client, sent, monkeypatch):
+    monkeypatch.setattr(telegram, "download_file", lambda *a: pytest.fail("should not download"))
+    post(client, voice={**VOICE, "duration": 3600})
+    [reply] = messages(sent)
+    assert "too long" in reply["text"]
+
+
+def test_voice_download_failure_is_reported(client, sent, monkeypatch):
+    def boom(file_id):
+        raise telegram.TelegramError("getFile failed")
+
+    monkeypatch.setattr(telegram, "download_file", boom)
+    post(client, voice=VOICE)
+    [reply] = messages(sent)
+    assert "Couldn't download" in reply["text"]
 
 
 def test_missing_voice_instructions(client, sent, monkeypatch):
@@ -190,3 +245,10 @@ def test_malformed_json_is_a_gemini_error(monkeypatch):
     fake_gemini(monkeypatch, '{"drafts": [')
     with pytest.raises(gemini.GeminiError):
         gemini.draft_posts("note", "voice", 5)
+
+
+def test_transcribe_sends_audio_inline(monkeypatch):
+    captured = fake_gemini(monkeypatch, '{"transcript": " hello there "}')
+    assert gemini.transcribe(b"\x00\x01", "audio/ogg") == "hello there"
+    [part] = captured["contents"][0]["parts"]
+    assert part["inline_data"] == {"mime_type": "audio/ogg", "data": "AAE="}

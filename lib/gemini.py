@@ -1,11 +1,13 @@
-"""Gemini: scores each of Meera's rough notes, and turns the ones worth
-posting into several draft posts in her voice to choose from.
+"""Gemini: transcribes Meera's voice notes, scores each rough note, and
+turns the ones worth posting into several draft posts in her voice to
+choose from.
 
 Called over plain REST with response schemas (structured output), so replies
 are always parseable JSON and there's no SDK / gRPC dependency to bundle on
 Vercel.
 """
 
+import base64
 import json
 
 import requests
@@ -81,8 +83,24 @@ DRAFTS_SCHEMA = {
 }
 
 
+TRANSCRIBE_PROMPT = """Transcribe this voice note from Meera, a founder, word for word in the language she speaks. Leave out filler sounds (um, uh) and false starts, but keep everything she actually says, including numbers and product or ingredient names spelled correctly. If there's no speech, return an empty transcript."""
+
+TRANSCRIBE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {"transcript": {"type": "STRING"}},
+    "required": ["transcript"],
+}
+
+
 class GeminiError(Exception):
     pass
+
+
+def transcribe(audio, mime_type):
+    """Returns the transcript of a voice note ("" if there's no speech)."""
+    parts = [{"inline_data": {"mime_type": mime_type, "data": base64.b64encode(audio).decode()}}]
+    data = _generate(TRANSCRIBE_PROMPT, parts, TRANSCRIBE_SCHEMA, temperature=0, timeout=40)
+    return str(data.get("transcript", "")).strip() if isinstance(data, dict) else ""
 
 
 def score_note(note):
@@ -111,11 +129,12 @@ def draft_posts(note, voice, count=5):
 
 
 def _generate(system, user, schema, temperature, timeout):
+    """`user` is the message text, or a list of content parts (e.g. audio)."""
     if not config.GEMINI_CONFIGURED:
         raise GeminiError("GEMINI_API_KEY isn't set.")
     body = {
         "systemInstruction": {"parts": [{"text": system}]},
-        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "contents": [{"role": "user", "parts": [{"text": user}] if isinstance(user, str) else user}],
         "generationConfig": {
             "responseMimeType": "application/json",
             "responseSchema": schema,
@@ -130,8 +149,8 @@ def _generate(system, user, schema, temperature, timeout):
             API_URL.format(model=config.GEMINI_MODEL),
             headers={"x-goog-api-key": config.GEMINI_API_KEY, "Content-Type": "application/json"},
             json=body,
-            # Scoring + drafting together stay under Telegram's webhook
-            # timeout, so a slow reply doesn't make Telegram resend the note.
+            # Transcribing + scoring + drafting together stay under Telegram's
+            # webhook timeout, so a slow reply doesn't make Telegram resend.
             timeout=timeout,
         )
     except requests.Timeout:

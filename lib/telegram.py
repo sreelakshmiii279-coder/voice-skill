@@ -7,6 +7,7 @@ import requests
 from . import config
 
 API_URL = "https://api.telegram.org/bot{token}/{method}"
+FILE_URL = "https://api.telegram.org/file/bot{token}/{path}"
 # Telegram rejects messages longer than this.
 MAX_MESSAGE_LENGTH = 4096
 
@@ -39,6 +40,20 @@ def send_message(chat_id, text, reply_to=None):
         if reply_to and i == 0:
             params["reply_parameters"] = {"message_id": reply_to, "allow_sending_without_reply": True}
         call("sendMessage", **params)
+
+
+def download_file(file_id):
+    """Fetch a file someone sent the bot (e.g. a voice note) as bytes."""
+    info = call("getFile", file_id=file_id)
+    if not info or not info.get("file_path"):
+        # The Bot API only serves files up to 20 MB.
+        raise TelegramError("getFile returned no file path (file too big?)")
+    try:
+        resp = requests.get(FILE_URL.format(token=config.TELEGRAM_BOT_TOKEN, path=info["file_path"]), timeout=20)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        raise TelegramError(f"file download failed: {e.__class__.__name__}")
+    return resp.content
 
 
 def send_typing(chat_id):
