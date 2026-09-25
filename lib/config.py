@@ -27,6 +27,11 @@ ALLOWED_CHAT_IDS = {int(x) for x in re.split(r"[,\s]+", _env("ALLOWED_CHAT_IDS")
 GEMINI_API_KEY = _env("GEMINI_API_KEY")
 GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-3.6-flash")
 
+# Notes scoring below this (0-10) are skipped instead of drafted.
+MIN_NOTE_SCORE = int(_env("MIN_NOTE_SCORE", "6") or 6)
+# How many alternative drafts each note gets.
+DRAFT_COUNT = int(_env("DRAFT_COUNT", "5") or 5)
+
 # Meera's voice guide. Lives in voice_instructions.md; the VOICE_INSTRUCTIONS
 # env var overrides the file if set.
 VOICE_FILE = ROOT / "voice_instructions.md"

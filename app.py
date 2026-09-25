@@ -18,8 +18,9 @@ log = logging.getLogger("meera-drafts")
 app = Flask(__name__)
 
 HELP_TEXT = (
-    "Send me a note — a rough thought, a few bullet points, anything — "
-    "and I'll turn it into a draft post in your voice."
+    "Send me a note — a rough thought, a few bullet points, anything. "
+    "If there's enough in it for a post, I'll send back a few drafts in your "
+    "voice to choose from. Reminders and half-finished thoughts get skipped."
 )
 
 
@@ -97,12 +98,24 @@ def handle_update(update):
 
     telegram.send_typing(chat_id)
     try:
-        draft = gemini.draft_post(note, voice)
+        # Reminders and half-finished thoughts get scored low and stop here.
+        score, reason = gemini.score_note(note)
+        log.info("Note scored %s/10: %s", score, reason)
+        if score < config.MIN_NOTE_SCORE:
+            telegram.send_message(chat_id, f"No draft for this one ({score}/10): {reason}", message_id)
+            return
+        telegram.send_message(
+            chat_id, f"{score}/10: {reason}\n\nWriting {config.DRAFT_COUNT} drafts to choose from…", message_id
+        )
+        telegram.send_typing(chat_id)
+        drafts = gemini.draft_posts(note, voice, config.DRAFT_COUNT)
     except gemini.GeminiError as e:
         log.warning("Draft failed: %s", e)
         telegram.send_message(chat_id, f"Couldn't draft that one: {e}\n\nSend the note again to retry.", message_id)
         return
-    telegram.send_message(chat_id, draft, message_id)
+    for i, (label, text) in enumerate(drafts, 1):
+        header = f"Draft {i} of {len(drafts)}" + (f" · {label}" if label else "")
+        telegram.send_message(chat_id, f"{header}\n\n{text}", message_id)
 
 
 if __name__ == "__main__":

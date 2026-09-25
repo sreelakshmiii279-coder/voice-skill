@@ -1,8 +1,9 @@
 # Meera Drafts
 
 A Telegram bot that turns Meera's notes into draft posts. She texts a note to
-the bot, the note goes to Gemini along with her voice instructions, and the
-draft comes back as a reply in the same chat. Hosted on Vercel.
+the bot, Gemini scores whether the note has enough in it for a post, and if
+it does, writes 5 drafts in her voice that come back as replies in the same
+chat. Hosted on Vercel.
 
 ```
 Meera ──note──▶ Telegram ──webhook──▶ Vercel (/api/telegram) ──▶ Gemini
@@ -105,6 +106,11 @@ From then on, her notes get drafts and messages from anyone else are ignored.
   Meera's voice, edit `voice_instructions.md` and commit it to `main`.
 - Alternatively, paste the guide into a `VOICE_INSTRUCTIONS` environment
   variable in Vercel, which overrides the file (redeploy after changing it).
+- Each note is first scored 0–10 for how much post material it has. Below 6
+  (reminders, logistics, half-finished thoughts) the bot replies with the
+  score and reason and doesn't draft. At 6 or above it sends 5 drafts, each a
+  different take, to choose from. Change these with `MIN_NOTE_SCORE` and
+  `DRAFT_COUNT`.
 - The model defaults to `gemini-3.6-flash`; set `GEMINI_MODEL` to change it.
 - If Gemini fails (timeout, rate limit, bad key), Meera gets a short message
   saying why and can resend the note.
