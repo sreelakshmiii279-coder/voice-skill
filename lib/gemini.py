@@ -1,6 +1,6 @@
-"""Gemini: transcribes Meera's voice notes, scores each rough note, and
-turns the ones worth posting into several draft posts in her voice to
-choose from.
+"""Gemini: transcribes Meera's voice notes and scores each rough note (plus
+suggests a news search for it). It also writes the drafts when no Claude
+key is configured — see lib/drafting.py.
 
 Called over plain REST with response schemas (structured output), so replies
 are always parseable JSON and there's no SDK / gRPC dependency to bundle on
@@ -33,57 +33,26 @@ Judge only whether the note has enough substance for a post, not whether you agr
 how well it's written. Rough grammar, typos and shorthand are normal and don't lower the score.
 
 The reason is one short sentence (under 20 words) addressed to Meera, saying what the note has \
-or lacks."""
+or lacks.
+
+The news query is a 2-5 word Google News search for recent industry news on the note's topic \
+(e.g. "vitamin C serum stability", "India cosmetics labelling rules"). Name the subject, not \
+her brand. Leave it empty for notes that score below 6."""
 
 SCORE_SCHEMA = {
     "type": "OBJECT",
-    "properties": {"score": {"type": "INTEGER"}, "reason": {"type": "STRING"}},
-    "required": ["score", "reason"],
-}
-
-DRAFTS_PROMPT = """You are Meera's ghostwriter. Meera is a founder. She sends you rough notes \
-— half-formed thoughts, bullet points, voice-to-text fragments — and you turn each one into \
-draft posts she could publish with light edits, written the way she writes.
-
-Write exactly {count} drafts of the same note, so she has real options to choose from. Make \
-each one a genuinely different take: a different opening (from the kinds of openings she uses), \
-a different point of emphasis or structure, and a different length. Don't write {count} \
-rewordings of one draft.
-
-For each draft, give a short label (3-6 words) saying what's different about it, and the post \
-text.
-
-Rules for every draft:
-- The post text is the post only. No preamble, title, "Draft:" label or notes to Meera.
-- Plain text only: no Markdown (no **bold**, # headings or [links](…)). It's shown in Telegram \
-as-is.
-- Keep her ideas, stories and opinions. Don't invent facts, numbers, ranges, names, customers, \
-quotes, scenes, timeframes ("last month", "in 2021") or events that aren't in her note. Varying \
-the angle never means adding new claims: only use a scene opening if the note describes one, \
-and every number in a draft must appear in the note.
-- If the note is thin, keep the drafts short rather than padding them out.
-
-How Meera writes:
-
-{voice}"""
-
-DRAFTS_SCHEMA = {
-    "type": "OBJECT",
     "properties": {
-        "drafts": {
-            "type": "ARRAY",
-            "items": {
-                "type": "OBJECT",
-                "properties": {"label": {"type": "STRING"}, "text": {"type": "STRING"}},
-                "required": ["label", "text"],
-            },
-        }
+        "score": {"type": "INTEGER"},
+        "reason": {"type": "STRING"},
+        "news_query": {"type": "STRING"},
     },
-    "required": ["drafts"],
+    "required": ["score", "reason", "news_query"],
 }
 
-
-TRANSCRIBE_PROMPT = """Transcribe this voice note from Meera, a founder, word for word in the language she speaks. Leave out filler sounds (um, uh) and false starts, but keep everything she actually says, including numbers and product or ingredient names spelled correctly. If there's no speech, return an empty transcript."""
+TRANSCRIBE_PROMPT = """Transcribe this voice note from Meera, a founder, word for word in the \
+language she speaks. Leave out filler sounds (um, uh) and false starts, but keep everything she \
+actually says, including numbers and product or ingredient names spelled correctly. If there's \
+no speech, return an empty transcript."""
 
 TRANSCRIBE_SCHEMA = {
     "type": "OBJECT",
@@ -99,36 +68,22 @@ class GeminiError(Exception):
 def transcribe(audio, mime_type):
     """Returns the transcript of a voice note ("" if there's no speech)."""
     parts = [{"inline_data": {"mime_type": mime_type, "data": base64.b64encode(audio).decode()}}]
-    data = _generate(TRANSCRIBE_PROMPT, parts, TRANSCRIBE_SCHEMA, temperature=0, timeout=40)
+    data = generate(TRANSCRIBE_PROMPT, parts, TRANSCRIBE_SCHEMA, temperature=0, timeout=40)
     return str(data.get("transcript", "")).strip() if isinstance(data, dict) else ""
 
 
 def score_note(note):
-    """Returns (score 0-10, one-line reason)."""
-    data = _generate(SCORE_PROMPT, f"Here's the note:\n\n{note}", SCORE_SCHEMA, temperature=0.2, timeout=20)
+    """Returns (score 0-10, one-line reason, news search query)."""
+    data = generate(SCORE_PROMPT, f"Here's the note:\n\n{note}", SCORE_SCHEMA, temperature=0.2, timeout=20)
     try:
         score = max(0, min(10, int(data["score"])))
         reason = str(data["reason"]).strip()
     except (KeyError, TypeError, ValueError):
         raise GeminiError("Gemini's score came back in an unexpected format.")
-    return score, reason
+    return score, reason, str(data.get("news_query") or "").strip()
 
 
-def draft_posts(note, voice, count=5):
-    """Returns a list of (label, text) drafts."""
-    system = DRAFTS_PROMPT.format(count=count, voice=voice)
-    data = _generate(system, f"Here's my note:\n\n{note}", DRAFTS_SCHEMA, temperature=0.9, timeout=45)
-    drafts = [
-        (str(d.get("label", "")).strip(), str(d.get("text", "")).strip())
-        for d in data.get("drafts", [])
-        if isinstance(d, dict) and str(d.get("text", "")).strip()
-    ]
-    if not drafts:
-        raise GeminiError("Gemini came back without any drafts.")
-    return drafts[:count]
-
-
-def _generate(system, user, schema, temperature, timeout):
+def generate(system, user, schema, temperature, timeout):
     """`user` is the message text, or a list of content parts (e.g. audio)."""
     if not config.GEMINI_CONFIGURED:
         raise GeminiError("GEMINI_API_KEY isn't set.")

@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from lib import config, gemini  # noqa: E402
+from lib import config, drafting, gemini, news  # noqa: E402
 
 
 def main():
@@ -22,17 +22,24 @@ def main():
     voice = config.voice_instructions()
     if not voice:
         sys.exit("voice_instructions.md still has the placeholder - add Meera's voice guide first.")
-    score, reason = gemini.score_note(note)
+    score, reason, news_query = gemini.score_note(note)
     print(f"Score: {score}/10 - {reason}")
     if score < config.MIN_NOTE_SCORE:
         print(f"Below {config.MIN_NOTE_SCORE}: no drafts.")
         return
-    for i, (label, text) in enumerate(gemini.draft_posts(note, voice, config.DRAFT_COUNT), 1):
-        print(f"\n=== Draft {i}: {label} ===\n{text}")
+    headlines = news.recent_headlines(news_query) if config.NEWS_HOOKS else []
+    print(f"News search {news_query!r}: {len(headlines)} headlines")
+    for h in headlines:
+        print(f"  - {h['title']} ({h['source']}, {h['date']})")
+    print(f"Drafts by {drafting.provider()}")
+    for i, d in enumerate(drafting.draft_posts(note, voice, headlines, config.DRAFT_COUNT), 1):
+        print(f"\n=== Draft {i}: {d.label} ===\n{d.text}")
+        if d.headline:
+            print(f"[News hook: {d.headline['title']} ({d.headline['source']})]")
 
 
 if __name__ == "__main__":
     try:
         main()
-    except gemini.GeminiError as e:
+    except (gemini.GeminiError, *drafting.DraftError) as e:
         sys.exit(str(e))

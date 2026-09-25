@@ -1,5 +1,6 @@
-"""Telegram webhook: Meera sends a note, Gemini drafts a post in her voice,
-and the draft comes back as a reply in the same chat.
+"""Telegram webhook: Meera sends a note (typed or voice), Gemini transcribes
+and scores it, Google News supplies a possible hook, Claude writes drafts in
+her voice, and they come back as replies in the same chat.
 
 Deployed on Vercel (which picks up the Flask `app` below automatically).
 Telegram is pointed at /api/telegram by scripts/set_webhook.py.
@@ -10,7 +11,7 @@ import logging
 
 from flask import Flask, jsonify, request
 
-from lib import config, gemini, telegram
+from lib import config, drafting, gemini, news, telegram
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("meera-drafts")
@@ -34,6 +35,9 @@ def health():
         allowed_chats=len(config.ALLOWED_CHAT_IDS),
         gemini_configured=config.GEMINI_CONFIGURED,
         gemini_model=config.GEMINI_MODEL,
+        drafts_written_by=drafting.provider(),
+        claude_model=config.CLAUDE_MODEL if config.CLAUDE_CONFIGURED else None,
+        news_hooks=config.NEWS_HOOKS,
         voice_instructions_written=bool(config.voice_instructions()),
     )
 
@@ -124,7 +128,7 @@ def handle_update(update):
             telegram.send_typing(chat_id)
 
         # Reminders and half-finished thoughts get scored low and stop here.
-        score, reason = gemini.score_note(note)
+        score, reason, news_query = gemini.score_note(note)
         log.info("Note scored %s/10: %s", score, reason)
         if score < config.MIN_NOTE_SCORE:
             telegram.send_message(chat_id, f"No draft for this one ({score}/10): {reason}", message_id)
@@ -133,14 +137,21 @@ def handle_update(update):
             chat_id, f"{score}/10: {reason}\n\nWriting {config.DRAFT_COUNT} drafts to choose from…", message_id
         )
         telegram.send_typing(chat_id)
-        drafts = gemini.draft_posts(note, voice, config.DRAFT_COUNT)
-    except gemini.GeminiError as e:
+        headlines = news.recent_headlines(news_query) if config.NEWS_HOOKS else []
+        log.info("News query %r: %d headlines", news_query, len(headlines))
+        drafts = drafting.draft_posts(note, voice, headlines, config.DRAFT_COUNT)
+    except (gemini.GeminiError, *drafting.DraftError) as e:
         log.warning("Draft failed: %s", e)
         telegram.send_message(chat_id, f"Couldn't draft that one: {e}\n\nSend the note again to retry.", message_id)
         return
-    for i, (label, text) in enumerate(drafts, 1):
-        header = f"Draft {i} of {len(drafts)}" + (f" · {label}" if label else "")
-        telegram.send_message(chat_id, f"{header}\n\n{text}", message_id)
+    for i, draft in enumerate(drafts, 1):
+        header = f"Draft {i} of {len(drafts)}" + (f" · {draft.label}" if draft.label else "")
+        text = f"{header}\n\n{draft.text}"
+        if draft.headline:
+            # So she can check the story before posting.
+            h = draft.headline
+            text += f"\n\nNews hook: {h['title']} ({', '.join(x for x in (h['source'], h['date']) if x)})\n{h['link']}"
+        telegram.send_message(chat_id, text, message_id)
 
 
 if __name__ == "__main__":

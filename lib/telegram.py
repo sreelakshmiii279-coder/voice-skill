@@ -35,7 +35,8 @@ def call(method, **params):
 
 def send_message(chat_id, text, reply_to=None):
     for i, chunk in enumerate(_split(text)):
-        params = {"chat_id": chat_id, "text": chunk}
+        # No link preview cards (news hook links would otherwise add one per draft).
+        params = {"chat_id": chat_id, "text": chunk, "link_preview_options": {"is_disabled": True}}
         # Thread the (first part of the) reply under the note it answers.
         if reply_to and i == 0:
             params["reply_parameters"] = {"message_id": reply_to, "allow_sending_without_reply": True}

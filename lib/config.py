@@ -27,6 +27,15 @@ ALLOWED_CHAT_IDS = {int(x) for x in re.split(r"[,\s]+", _env("ALLOWED_CHAT_IDS")
 GEMINI_API_KEY = _env("GEMINI_API_KEY")
 GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-3.6-flash")
 
+# Claude writes the drafts when this is set (Gemini still transcribes and
+# scores). Without it, Gemini writes the drafts too.
+ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY")
+CLAUDE_MODEL = _env("CLAUDE_MODEL", "claude-opus-5")
+CLAUDE_EFFORT = _env("CLAUDE_EFFORT", "medium")
+
+# Recent Google News headlines on the note's topic, offered as draft hooks.
+NEWS_HOOKS = _env("NEWS_HOOKS", "on").lower() not in ("off", "0", "false", "no")
+
 # Notes scoring below this (0-10) are skipped instead of drafted.
 MIN_NOTE_SCORE = int(_env("MIN_NOTE_SCORE", "6") or 6)
 # How many alternative drafts each note gets.
@@ -46,6 +55,7 @@ PORT = int(_env("PORT", "5003") or 5003)
 
 TELEGRAM_CONFIGURED = bool(TELEGRAM_BOT_TOKEN)
 GEMINI_CONFIGURED = bool(GEMINI_API_KEY)
+CLAUDE_CONFIGURED = bool(ANTHROPIC_API_KEY)
 
 
 def voice_instructions():

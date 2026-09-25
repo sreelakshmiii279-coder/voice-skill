@@ -1,6 +1,7 @@
 flask==3.0.3
 python-dotenv==1.0.1
 requests==2.32.3
+anthropic==1.8.0
 # Lets requests use the OS certificate store on Windows (local dev only) —
 # without it, some networks fail HTTPS calls with CERTIFICATE_VERIFY_FAILED.
 pip-system-certs==5.3; sys_platform == "win32"
